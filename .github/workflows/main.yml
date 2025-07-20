@@ -32,15 +32,32 @@ jobs:
 
     - name: Download qcow2
       run: | 
-        images=($(curl -s -m 6 https://down.idc.wiki/Image/realServer-Template/current/qcow2/ | grep -o '<a href="[^"]*">' | awk -F'"' '{print $2}' | sed -n '/qcow2$/s#/Image/realServer-Template/current/qcow2/##p'))
+        curl -m 60 -o almalinux8.qcow2 "https://repo.almalinux.org/almalinux/8/cloud/x86_64/images/AlmaLinux-8-GenericCloud-latest.x86_64.qcow2"
+        curl -m 60 -o almalinux9.qcow2 "https://repo.almalinux.org/almalinux/8/cloud/x86_64/images/AlmaLinux-9-GenericCloud-latest.x86_64.qcow2"
+        curl -m 60 -o almalinux10.qcow2 "https://repo.almalinux.org/almalinux/8/cloud/x86_64/images/AlmaLinux-10-GenericCloud-latest.x86_64.qcow2"
+        curl -m 60 -o rockylinux8.qcow2 "https://dl.rockylinux.org/pub/rocky/8/images/x86_64/Rocky-8-GenericCloud-Base.latest.x86_64.qcow2"
+        curl -m 60 -o rockylinux9.qcow2 "https://dl.rockylinux.org/pub/rocky/9/images/x86_64/Rocky-9-GenericCloud-Base.latest.x86_64.qcow2"
+        curl -m 60 -o debian10.qcow2 "https://cloud.debian.org/images/cloud/buster/latest/debian-10-generic-amd64.qcow2"
+        curl -m 60 -o debian11.qcow2 "https://cloud.debian.org/images/cloud/bullseye/latest/debian-11-generic-amd64.qcow2"
+        curl -m 60 -o debian12.qcow2 "https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2"        
+        curl -m 60 -o centos7.qcow2 "https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2"
+        curl -m 60 -o centos8.qcow2 "https://cloud.centos.org/centos/8-stream/x86_64/images/CentOS-Stream-GenericCloud-x86_64-8-latest.x86_64.qcow2"
+        curl -m 60 -o centos9.qcow2 "https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-x86_64-9-latest.x86_64.qcow2"
+        curl -m 60 -o centos10.qcow2 "https://cloud.centos.org/centos/10-stream/x86_64/images/CentOS-Stream-GenericCloud-x86_64-10-latest.x86_64.qcow2"
+        curl -m 60 -o alpinestable.qcow2 "https://dl-cdn.alpinelinux.org/alpine/v3.22/releases/cloud/generic_alpine-3.22.0-x86_64-bios-cloudinit-r0.qcow2"
+        curl -m 60 -o ubuntu18.img "https://cloud-images.ubuntu.com/releases/bionic/release/ubuntu-18.04-server-cloudimg-amd64.img"
+        curl -m 60 -o ubuntu20.img "https://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64-disk-kvm.img"
+        curl -m 60 -o ubuntu22.img "https://cloud-images.ubuntu.com/releases/jammy/release/ubuntu-22.04-server-cloudimg-amd64-disk-kvm.img"
+        curl -m 60 -o ubuntu24.img "https://cloud-images.ubuntu.com/releases/noble/release/ubuntu-24.04-server-cloudimg-amd64.img"
+        qemu-img convert -f raw ubuntu18.img -O qcow2 ubuntu18.qcow2
+        qemu-img convert -f raw ubuntu20.img -O qcow2 ubuntu20.qcow2
+        qemu-img convert -f raw ubuntu22.img -O qcow2 ubuntu22.qcow2
+        qemu-img convert -f raw ubuntu24.img -O qcow2 ubuntu24.qcow2
+
+        images=($(ls -1 | grep qcow2))
         if [ ${#images[@]} -gt 0 ]; then
             for image in "${images[@]}"; do
                 echo "$image"
-                curl -m 60 -o $image "https://down.idc.wiki/Image/realServer-Template/current/qcow2/$image"
-                if [ $? -ne 0 ]; then
-                    sleep 6
-                    curl -m 60 -o $image "https://down.idc.wiki/Image/realServer-Template/current/qcow2/$image"
-                fi
                 chmod 777 $image
                 sleep 1
             done
@@ -48,7 +65,7 @@ jobs:
       
     - name: Build and Upload Images
       run: |
-        images=($(curl -s -m 6 https://down.idc.wiki/Image/realServer-Template/current/qcow2/ | grep -o '<a href="[^"]*">' | awk -F'"' '{print $2}' | sed -n '/qcow2$/s#/Image/realServer-Template/current/qcow2/##p'))
+        images=($(ls -1 | grep qcow2))
         if [ ${#images[@]} -gt 0 ]; then
             release_id=$(curl -s -m 6 -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/Ivaneus/pve_kvm_images/releases/tags/images" | jq -r '.id')
             for file in "${images[@]}"; do
